@@ -10,3 +10,5 @@ Supported gestures:
   * next-song: send Next to mpris2 players
   * previous-song: send Previous to mpris2 players
   * toggle-flash: toggles the flash-led
+
+The upstart file gesture-daemon.conf can be put in ~/.config/upstart/ to have the daemon launched at startup. 
