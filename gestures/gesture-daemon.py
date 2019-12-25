@@ -10,6 +10,7 @@
 
 import os
 import sys
+import threading
 import traceback
 
 #import gobject
@@ -42,6 +43,21 @@ def toggle_flash():
     except Exception as exc:
          print("Exception in toggle_flash:", exc)
 
+def media_click_timer_passed():
+    global mediaClickState
+    if mediaClickState == 1: # single click
+        print("media click")
+        mprisCommand('play-pause')
+    elif mediaClickState == 2: # double click
+        print("media double click")
+        mprisCommand('next-song')
+    elif mediaClickState >= 3: # triple click
+        print("media triple click")
+        mprisCommand('previous-song')
+    mediaClickState = 0
+
+mediaClickState = 0
+mediaClickTimer = threading.Timer(0.5, media_click_timer_passed)
 sessionBus = dbus.SessionBus()
 
 def mprisCommand(command):
@@ -58,12 +74,21 @@ def mprisCommand(command):
                 player.PlayPause(dbus_interface='org.mpris.MediaPlayer2.Player')
 
 def catchall_gesture_signals_handler(gesture_string):
+    global mediaClickState
+    global mediaClickTimer
     print( "received: " + gesture_string )
     try:
         if gesture_string == 'toggle-flash':
             toggle_flash()
-        else:
+        elif    gesture_string == 'previous-song' \
+             or gesture_string == 'next-song' \
+             or gesture_string == 'play-pause':
             mprisCommand(gesture_string)
+        elif gesture_string == 'media':
+            mediaClickTimer.cancel()
+            mediaClickTimer = threading.Timer(0.5, media_click_timer_passed)
+            mediaClickTimer.start()
+            mediaClickState += 1
     except Exception as exc:
          print("Exception in catchall_gesture_signals_handler:", exc)
 
@@ -76,12 +101,12 @@ def catchall_signal_handler(*args, **kwargs):
 def catchall_gesture_interface_handler(gesture_string, dbus_message):
     print( "com.ubports.Unity.Gestures interface says " + gesture_string + " when it sent signal " + dbus_message.get_member())
 
-
 if __name__ == '__main__':
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     #bus = dbus.SessionBus()
     bus = dbus.SystemBus()
+
     try:
         object  = bus.get_object("com.ubports.Unity.Gestures", "/com/ubports/Unity/Gestures")
 

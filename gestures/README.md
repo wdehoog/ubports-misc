@@ -9,6 +9,10 @@ Supported gestures:
   * play-pause: send PlayPause to mpris2 players
   * next-song: send Next to mpris2 players
   * previous-song: send Previous to mpris2 players
+  * media key (for example headset button):
+    * click: pause/play
+    * double click: next song
+    * triple click: previous song
   * toggle-flash: toggles the flash-led
 
 The upstart file gesture-daemon.conf can be put in ~/.config/upstart/ to have the daemon launched at startup. 
