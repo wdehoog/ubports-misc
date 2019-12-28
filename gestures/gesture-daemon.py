@@ -26,7 +26,7 @@ def config_gestures():
         fp.write("1")
         fp = open("/proc/touchpanel/double_tap_enable", "r+")
         fp.write("1")
-        fp = open("/proc/touchpnanel/flashlight_enable", "r+")
+        fp = open("/proc/touchpanel/flashlight_enable", "r+")
         fp.write("1")
     except Exception as exc:
          print("Exception in config_gestures:", exc)
