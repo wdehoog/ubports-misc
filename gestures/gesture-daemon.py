@@ -17,23 +17,25 @@ import traceback
 from gi.repository import GObject as gobject
 
 import dbus
-import dbus.mainloop.glib
+from dbus.mainloop.glib import DBusGMainLoop
+
+DBusGMainLoop(set_as_default=True)
 
 # does not work due to permissions 
 def config_gestures():
     try:
-        fp = open("/proc/touchpanel/music_enable", "r+")
+        fp = open("/proc/touchpanel/music_enable", "w")
         fp.write("1")
-        fp = open("/proc/touchpanel/double_tap_enable", "r+")
+        fp = open("/proc/touchpanel/double_tap_enable", "w")
         fp.write("1")
-        fp = open("/proc/touchpanel/flashlight_enable", "r+")
+        fp = open("/proc/touchpanel/flashlight_enable", "w")
         fp.write("1")
     except Exception as exc:
          print("Exception in config_gestures:", exc)
 
 def toggle_flash():
     try:
-        fp = open("/sys/class/leds/torch-light/brightness", "r+")
+        fp = open("/sys/class/leds/torch-light/brightness", "w")
         cur_state = fp.read(1)
         fp.seek(0)
         if cur_state == '0':
@@ -73,10 +75,20 @@ def mprisCommand(command):
             elif command == 'play-pause':
                 player.PlayPause(dbus_interface='org.mpris.MediaPlayer2.Player')
 
-def catchall_gesture_signals_handler(gesture_string):
+def catchall_handler(*args, **kwargs):
+    print('---- Caught signal ----')
+    print('%s:%s\n' % (kwargs['dbus_interface'], kwargs['member']))
+    print('Arguments:')
+    for arg in args:
+        print('* %s' % str(arg))
+    print("\n")
+
+def catchall_gesture_signals_handler(mediakey):
     global mediaClickState
     global mediaClickTimer
-    print( "received: " + gesture_string )
+    #print( "received: " + str(mediakey))
+    gesture_string = mediakey['key-msg']
+    print( "received: " + gesture_string)
     try:
         if gesture_string == 'toggle-flash':
             toggle_flash()
@@ -99,29 +111,29 @@ def catchall_signal_handler(*args, **kwargs):
         print( "        " + str(arg) )
 
 def catchall_gesture_interface_handler(gesture_string, dbus_message):
-    print( "com.ubports.Unity.Gestures interface says " + gesture_string + " when it sent signal " + dbus_message.get_member())
+    print( "com.ubports.Lomiri.Broadcast interface says " + gesture_string + " when it sent signal " + dbus_message.get_member())
 
 if __name__ == '__main__':
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    #mainloop = DBusGMainLoop()
+    #loop = gobject.MainLoop()
+    #dbus.set_default_main_loop(mainloop)
 
-    #bus = dbus.SessionBus()
-    bus = dbus.SystemBus()
+    #bus = dbus.SessionBus(mainloop=mainloop)
+    bus = dbus.SessionBus()
+    #bus = dbus.SystemBus()
 
-    try:
-        object  = bus.get_object("com.ubports.Unity.Gestures", "/com/ubports/Unity/Gestures")
+    #try:
+    #    object  = bus.get_object("com.canonical.Unity", "/com/canonical/Unity")
+    #    #object  = bus.get_object("com.ubports.Lomiri.Broadcast", "/com/ubports/Lomiri/Broadcast")
 
-    except dbus.DBusException:
-        traceback.print_exc()
-        print( usage )
-        sys.exit(1)
+    #except dbus.DBusException:
+    #    traceback.print_exc()
+    #    #print( usage )
+    #    sys.exit(1)
 
-    #bus.add_signal_receiver(catchall_signal_handler, interface_keyword='dbus_interface', member_keyword='member')
-
-    bus.add_signal_receiver(catchall_gesture_signals_handler, dbus_interface = "com.ubports.Unity.Gestures", signal_name = "Gesture")
-
-    #bus.add_signal_receiver(catchall_gesture_interface_handler, dbus_interface = "com.ubports.Unity.Gestures", message_keyword='dbus_message')
+    bus.add_signal_receiver(catchall_gesture_signals_handler, dbus_interface = "com.ubports.Lomiri.Broadcast", signal_name = "MediaKey")
+    #bus.add_signal_receiver(catchall_handler, interface_keyword='dbus_interface', member_keyword='member')
 
     #config_gestures()
-
     loop = gobject.MainLoop()
     loop.run()

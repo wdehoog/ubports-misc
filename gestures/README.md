@@ -2,8 +2,13 @@
 
 Listens to gesture events on dbus (com.ubports.Unity.Gestures).
 
-Only tested on Oneplus One. It needs a [modified kernel](https://github.com/ubports/android_kernel_oneplus_msm8974/pull/4), [modified unity-system-compositor](https://github.com/ubports/unity-system-compositor/pull/11)
- and enabled gestures (see /proc/touchpanel).
+Only tested on Oneplus One. It needs [modified unity-system-compositor](https://github.com/wdehoog/unity-system-compositor/tree/xenial_-_add-media-keys) and a [modified unity8](https://github.com/wdehoog/unity8/tree/xenial_-_handle-media-keys) and enabled touch panel gestures:
+
+```
+echo 1 > /proc/touchpanel/music_enable
+echo 1 > /proc/touchpanel/double_tap_enable
+echo 1 > /proc/touchpanel/flashlight_enable
+```
 
 Supported gestures:
   * play-pause: send PlayPause to mpris2 players
